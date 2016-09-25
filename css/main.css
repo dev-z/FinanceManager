@@ -1,0 +1,86 @@
+.navbar {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    border: 0;
+    border-radius: 0;
+    margin-bottom: 0;
+    font-size: 12px;
+    letter-spacing: 2px;
+    box-shadow: #999999 0px 5px 5px;
+}
+.navbar > .container{
+    margin: 0em;
+    width: 100%;
+}
+.navbar-header .not-header{
+    font-size: 1.2em;
+}
+.container>.navbar-header {
+    margin-right: 5em;
+}
+.navbar-nav li a:hover {
+    color: #1abc9c !important;
+}
+.navbar .no-anchor > li{
+    padding: 7px 2px 0px 2px;
+    font-size: 1.1em;
+}
+.navbar .no-anchor > li:first-child{
+    padding: 15px 2px 0px 2px;
+    font-size: 1.1em;
+}
+/* End of navbar */
+.main-sec{
+    background-color: #DDDDDD;
+    height: 87vh;
+}
+.main-sec > .row > div{
+    height: 85vh;
+    padding-top: 0.5em;
+}
+.main-sec > .row > div.transaction{
+    background-color: #FFFFFF;
+    padding-top: 0.5em;
+    margin-top: 0.5em;
+}
+.add-account  button{
+    border: none;
+}
+.my-accounts{
+    margin-top: 1em;
+}
+.alignleft {
+    float: left;
+}
+.alignright {
+    float: right;
+}
+.txt-red{
+    color: red;
+}
+.txt-blue{
+    color: blue;
+}
+.nav-pills > li .row > div{
+    padding-right: 0.5em;
+}
+
+.trans-head{
+    padding: 1em;
+    border-bottom: 5px solid #ACACAC;
+}
+.trans-head > p{
+    margin-bottom: 0;
+}
+.each-trans-row{
+    padding: 0.75em;
+    border-bottom: 1px solid #CCCCCC;
+}
+.each-trans-row > div{
+    padding-right: 0;
+    padding-left: 0;
+}
+.each-trans-row > a > div{
+    padding-right: 0;
+    padding-left: 0;
+}

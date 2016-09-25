@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>FinanceManager</title>
+
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css">
+	<link rel="stylesheet" href="css/main.css">
+
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+
+</head>
+<body ng-app="ngFinanceManager" ng-controller="FinManCtrl">
+	<nav class="navbar navbar-default">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></a>
+				<a class="navbar-brand not-header" href="#">Transactions <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span></a>
+			</div>
+			<ul class="nav navbar-nav no-anchor">
+				<li>Add</li>
+				<li>
+					<select class="form-control" ng-model="chosenSource">
+						<option value="Income" selected>Income</option>
+						<option value="Expense">Expense</option>
+					</select>
+				</li>
+				<li><input type="number" class="form-control" placeholder="Amount" style="width: 8em" ng-model="chosenAmt"></li>
+				<li>
+					<select class="form-control" ng-model="chosenTag">
+						<option ng-repeat="tag1 in allTags" value="{{tag1.name}}">{{tag1.name}}</option>
+					</select>
+				</li>
+				<li><input type="text" class="form-control" placeholder="Description" ng-model="chosenDesc"></li>
+				<li>
+					<select class="form-control" ng-model="chosenAccount">
+						<option ng-repeat="acc in allAccounts" value="{{acc.name}}">{{acc.name}}</option>
+					</select>
+				</li>
+				<li><input type="text" ng-model="datePicker" datepicker class="form-control" style="width: 8em"></li>
+				<li>
+					<button type="button" class="btn btn-success" ng-click="addNewTransaction()">
+						<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+					</button>
+				</li>
+			</ul>
+			<ul class="nav navbar-nav navbar-right">
+				<!-- <li><a href="#">REGISTER</a></li> -->
+				<button type="button" class="btn btn-default" ng-click="saveToStorage()">SAVE</button>
+				<button type="button" class="btn btn-danger" ng-click="clearStorage()">Clear</button>
+			</ul>
+		</div>
+	</nav>
+	<div class="container-fluid main-sec">
+		<div class="row">
+			<div class="col-md-3"><!-- The Accounts area -->
+				<button class="btn btn-primary btn-sm" ng-click="showAddAccSec = true" ng-show="showAddAccSec === false">
+					<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add Account
+				</button>
+				<div class="alert alert-success" ng-show="accountAddedSuccess">
+					<a href="#" class="close" ng-click="accountAddedSuccess=false" aria-label="close">&times;</a>
+					<strong>Success!</strong> Account added.
+				</div>
+				<div class="alert alert-danger" ng-show="accountAddError1">
+					<a href="#" class="close" ng-click="accountAddError1=false" aria-label="close">&times;</a>
+					<strong>Error!</strong> Account already exists.
+				</div>
+				<div class="alert alert-danger" ng-show="accountAddError2">
+					<a href="#" class="close" ng-click="accountAddError2=false" aria-label="close">&times;</a>
+					<strong>Error!</strong> Invalid Account name.
+				</div>
+				<div class="add-account" ng-show="showAddAccSec === true">
+					<div class="form-group">
+						<input type="text" class="form-control" placeholder="Name" ng-model="newAccName" required>
+					</div>
+					<div class="form-group">
+						<input type="number" class="form-control" placeholder="Amount" ng-model="newAccAmt" min="0" required>
+					</div>
+					<div class="form-group">
+						<select class="form-control" ng-model="newAccCurr">
+							<option ng-repeat="curr in currencies" value="{{curr.cc}}">{{curr.cc+" "+curr.name}}</option>
+						</select>
+					</div>
+					<div class="row">
+						<div class="col-xs-6">
+							<button type="submit" class="btn btn-default btn-block" ng-click="addNewAccount()">
+								<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+							</button>
+						</div>
+						<div class="col-xs-6">
+							<button type="button" class="btn btn-default btn-block" ng-click="cancelNewAccount()">
+								<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<ul class="nav nav-pills nav-stacked my-accounts">
+					<li class="active"><a href="#" ng-click="currentAccount=''" data-toggle="pill">
+						<div class="row">
+							<div class="col-sm-6 text-left"><strong>All Accounts</strong></div>
+							<div class="col-sm-6 text-right"><strong>{{allAccountsMoney}}</strong></div>
+						</div>
+					</a></li>
+					<li ng-repeat="account in allAccounts">
+						<a href="#" ng-hide="editing" data-toggle="pill" ng-click="setCurrentAccount(account.name)">
+							<div class="row">
+								<div class="col-sm-4 text-left">
+									<span>{{account.name}}</span>
+								</div>
+								<div class="col-sm-5 text-right" style="border-right: 1px dotted slategray">
+									<span>{{account.amount}}</span>
+								</div>
+								<div class="col-sm-3">
+									<span class="glyphicon glyphicon-pencil txt-blue" aria-hidden="true" ng-click="editing = true" style="margin-right: 10px"></span>
+									<span class="glyphicon glyphicon-remove txt-red" aria-hidden="true" ng-click="remove(account)"></span>
+								</div>
+							</div>
+						</a>
+						<form ng-show="editing" ng-submit="editing = false">
+							<div class="form-group">
+								<input type="text" class="form-control" placeholder="Name" ng-model="account.name" required>
+							</div>
+							<div class="form-group">
+								<input type="number" class="form-control" placeholder="Amount" ng-model="account.amount" required>
+							</div>
+							<div class="form-group">
+								<select class="form-control" ng-model="account.currency">
+									<option ng-repeat="curr in currencies" value="{{curr.cc}}">{{curr.cc+" "+curr.name}}</option>
+								</select>
+							</div>
+							<button class="btn btn-default" type="submit" ng-click="updateRecords()">Save</button>
+							<!-- <button class="btn" type="button" ng-click="remove(account)">Delete</button> -->
+						</form>
+					</li>
+				</ul>
+			</div><!-- End The Accounts area -->
+			<!-- -------------------------------------------------------------------------------------------------------- -->
+			<div class="col-md-6 transaction"><!-- The main area -->
+				<div class="row trans-head">
+					<div class="col-md-4">
+						<span>Month</span>
+						<select ng-model="currentMonth">
+							<option value="01">January</option>
+							<option value="02">February</option>
+							<option value="03">March</option>
+							<option value="04">April</option>
+							<option value="05">May</option>
+							<option value="06">June</option>
+							<option value="07">July</option>
+							<option value="08">August</option>
+							<option value="09">September</option>
+							<option value="10">October</option>
+							<option value="11">November</option>
+							<option value="12">December</option>
+						</select>
+					</div>
+					<div class="col-md-4 text-center">
+						<p>Transactions</p>
+					</div>
+					<div class="col-md-4">
+						<div class="btn-group">
+							<button type="button" class="btn btn-default btn-sm" ng-click="currentSrc=''">All</button>
+							<button type="button" class="btn btn-default btn-sm" ng-click="currentSrc='Income'">Income</button>
+							<button type="button" class="btn btn-default btn-sm" ng-click="currentSrc='Expense'">Expenses</button>
+						</div>
+					</div>
+				</div>
+				<div class="row each-trans-row" ng-repeat="eachTrans in allTransactions | filter:{account:currentAccount}|filter:{tag:currentTag}|filter:{month:currentMonth}|filter:{source:currentSrc}">
+					<a href="#" ng-hide="editing" ng-click="editing=true; setEditingTrans(eachTrans); updatedTag=eachTrans.tag; updatedAmt=eachTrans.amount; updatedDesc=eachTrans.desc; updatedAccount=eachTrans.account; updatedDate=eachTrans.date+'/'+eachTrans.month+'/'+eachTrans.year;">
+						<div class="col-sm-1">{{eachTrans.source | limitTo: 3}}</div>
+						<div class="col-sm-2">{{eachTrans.amount}}</div>
+						<div class="col-sm-2">{{eachTrans.tag}}</div>
+						<div class="col-sm-3">{{eachTrans.desc}}</div>
+						<div class="col-sm-2">{{eachTrans.account}}</div>
+						<div class="col-sm-1">{{eachTrans.date+"/"+eachTrans.month}}</div>
+						<div class="col-sm-1 text-center">
+							<span class="glyphicon glyphicon-remove txt-red" aria-hidden="true" ng-click="reverseTransaction(eachTrans)"></span>
+						</div>
+					</a>
+					<form ng-show="editing" ng-submit="editing = false" class="form-inline">
+						<div class="form-group">
+							<input type="number" placeholder="Amount" ng-model="updatedAmt" style="width: 5em" class="form-control">
+						</div>
+						<div class="form-group">
+							<select ng-model="updatedTag" style="width: 6em" class="form-control">
+								<option ng-repeat="tag2 in allTags" value="{{tag2.name}}">{{tag2.name}}</option>
+							</select>
+							<!-- <input type="text" placeholder="Tag" value="{{eachTrans.tag}}"> -->
+						</div>
+						<div class="form-group">
+							<input type="text" placeholder="Description" ng-model="updatedDesc" style="width:7em" class="form-control">
+						</div>
+						<div class="form-group">
+							<select ng-model="updatedAccount" style="width: 6em" class="form-control">
+								<option ng-repeat="acc2 in allAccounts" value="{{acc2.name}}">{{acc2.name}}</option>
+							</select>
+							<!-- <input type="text" placeholder="account" value="{{eachTrans.account}}"> -->
+						</div>
+						<div class="form-group">
+							<input type="text" ng-model="updatedDate" datepicker class="form-control" style="width: 8em">
+						</div>
+						<button class="btn btn-default" type="submit" ng-click="setUpdatedTrans(updatedAmt, updatedTag, updatedDesc, updatedAccount, updatedDate);">Save</button>
+						<button class="btn" type="button" ng-click="editing=false">Cancel</button>
+					</form>
+
+				</div>
+				<!--
+				<p>{{editingTrans}}</p>
+				<p>{{updatedTrans}}</p>
+				<p>{{chosenSource}}</p>
+				<p>{{chosenAmt}}</p>
+				<p>{{chosenTag}}</p>
+				<p>{{chosenDesc}}</p>
+				<p>{{chosenAccount}}</p>
+				<p>{{datePicker}}</p>
+				<p>{{currentAccount}}</p>
+				<p>{{currentMonth}}</p>
+				<p>{{currentTag}}</p>
+				-->
+			</div><!-- End of the main area -->
+			<!-- -------------------------------------------------------------------------------------------------------- -->
+			<div class="col-md-3"><!-- The tags area -->
+				<button class="btn btn-primary btn-sm" ng-click="showAddTagSec = true" ng-show="showAddTagSec === false">
+					<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add Tag
+				</button>
+				<div class="alert alert-success" ng-show="tagAddedSuccess">
+					<a href="#" class="close" ng-click="tagAddedSuccess=false" aria-label="close">&times;</a>
+					<strong>Success!</strong> Tag added.
+				</div>
+				<div class="alert alert-danger" ng-show="tagAddError1">
+					<a href="#" class="close" ng-click="tagAddError1=false" aria-label="close">&times;</a>
+					<strong>Error!</strong> Tag already exists.
+				</div>
+				<div class="alert alert-danger" ng-show="tagAddError2">
+					<a href="#" class="close" ng-click="tagAddError2=false" aria-label="close">&times;</a>
+					<strong>Error!</strong> Invalid Tag name.
+				</div>
+				<div class="add-account" ng-show="showAddTagSec === true">
+					<div class="form-group">
+						<input type="text" class="form-control" placeholder="Name" ng-model="newTagName" required>
+					</div>
+					<div class="row">
+						<div class="col-xs-6">
+							<button type="button" class="btn btn-default btn-block" ng-click="addNewTag()">
+								<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+							</button>
+						</div>
+						<div class="col-xs-6">
+							<button type="button" class="btn btn-default btn-block" ng-click="cancelNewTag()">
+								<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<ul class="nav nav-pills nav-stacked my-accounts">
+					<li class="active"><a href="#" ng-click="currentTag=''" data-toggle="pill">All Tags</a></li>
+					<li ng-repeat="tag in allTags | filter: greaterThan('count', 0)" ng-click="setCurrentTag(tag.name)">
+						<a href="#" data-toggle="pill">
+							<div class="row">
+								<!--<div class="col-sm-1"></div>-->
+								<div class="col-sm-5 text-left">
+									<span>{{tag.name+" : "+tag.count}}</span>
+								</div>
+								<div class="col-sm-5 text-right" style="border-right: 1px dotted slategray">
+									<span>{{tag.amount}}</span>
+								</div>
+								<div class="col-sm-2">
+									<span class="glyphicon glyphicon-remove txt-red" aria-hidden="true" ng-click="removeTag(tag)"></span>
+								</div>
+							</div>
+						</a>
+					</li>
+				</ul>
+			</div><!-- End of the tags area -->
+		</div><!-- /.row -->
+	</div><!-- .container-fluid main-sec -->
+	<!-- ---- Scripts ---- -->
+	<!-- jQuery library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<!-- Latest compiled JavaScript -->
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<!-- AngularJS -->
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/ngstorage/0.3.6/ngStorage.min.js"></script>
+
+	<script src="scripts/app.js"></script>
+	<script src="scripts/FinManCtrl.js"></script>
+	<script src="scripts/finManServices.js"></script>
+	<script>
+		angular.module("ngFinanceManager").directive("datepicker", function () {
+			return {
+				restrict: "A",
+				require: "ngModel",
+				link: function (scope, elem, attrs, ngModelCtrl) {
+					var updateModel = function (dateText) {
+						scope.$apply(function () {
+							ngModelCtrl.$setViewValue(dateText);
+						});
+					};
+					var options = {
+						dateFormat: "dd/mm/yy",
+						onSelect: function (dateText) {
+							updateModel(dateText);
+						}
+					};
+					elem.datepicker(options);
+				}
+			}
+		});
+	</script>
+
+</body>
+</html>
