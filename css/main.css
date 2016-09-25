@@ -32,7 +32,7 @@
 /* End of navbar */
 .main-sec{
     background-color: #DDDDDD;
-    height: 87vh;
+    height: 89vh;
 }
 .main-sec > .row > div{
     height: 85vh;
@@ -83,4 +83,11 @@
 .each-trans-row > a > div{
     padding-right: 0;
     padding-left: 0;
+}
+
+footer{
+    padding: 1em;
+    background-color: #333333;
+    color: #f4f4f4;
+    border-top: 5px solid red;
 }
